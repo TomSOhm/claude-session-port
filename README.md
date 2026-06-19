@@ -20,6 +20,23 @@ Nothing is uploaded anywhere.
 /delete_uuid <uuid> [--hard]    # prune a local session (native trash or permanent)
 ```
 
+> ⚠️ **Status: v0.2.0 is new and not yet battle-tested in everyday real-world use. Treat it
+> as beta.**
+>
+> **Verified:** the cross-OS file mechanics - path encoding, home remap, `manifest.json`,
+> `.tar.gz` create/extract with real `tar`, and the trash fallback - pass automated tests on
+> **Windows, macOS, and Linux** in CI, and the maintainer has run the full
+> `export -> import -> /resume` round-trip on **Windows**.
+>
+> **Not yet verified:** live `/resume` pickup on **macOS/Linux**, the native-trash side
+> effects (Recycle Bin / Finder / `gio trash`), and a full **two-machine** transfer end to
+> end. CI cannot drive the Claude Code app itself, so that last mile is unproven.
+>
+> Before trusting it with an important conversation: **keep the original until you've
+> confirmed the copy resumes**, and please
+> [report what worked or broke](https://github.com/TomSOhm/claude-session-port/issues) -
+> real-world testers (especially on macOS/Linux) are exactly what this needs right now.
+
 ---
 
 ## Why this exists
@@ -225,6 +242,12 @@ See [docs/session-format.md](docs/session-format.md) for the full layout and cav
   the CI matrix, but the live `/resume` pickup is community-confirmed rather than
   maintainer-confirmed - CI cannot drive the Claude Code app itself. Reports from mac/Linux
   users are very welcome.
+- **Automated tests cover the building blocks, not the whole flow.** CI unit-tests the pure
+  logic (encode, home remap, manifest parse, session resolution, title/branch parsing) plus a
+  real-`tar` archive round-trip, on all three OSes. It does **not** yet exercise the full
+  command flows end-to-end (`export`/`import`/`delete` wired together), nor the native-trash
+  side effects (only the quarantine fallback is unit-tested). Those paths are checked manually
+  on Windows and rely on user reports elsewhere.
 - **Home-prefix remap only.** The transcript's home prefix is tokenized on export and
   remapped to the destination home on import (so paths under home read cleanly across
   usernames and OSes). Paths outside home are left as-is; resume works regardless, since the
