@@ -56,11 +56,9 @@ export function trashRoot(home, os) {
 }
 
 /**
- * The session folder for a given project working directory.
- * projectDir(home, os, cwd) -> <home>/.claude/projects/<encoded-cwd>
- * (encoding is done by core/encode.mjs; callers pass the already-encoded name
- *  via projectsBase + join, OR use this helper which expects the raw cwd and the
- *  encoder is applied by the command layer - kept simple: join base + encoded.)
+ * The session folder for a project, given an ALREADY-encoded cwd name. Apply
+ * encodeCwd() (core/encode.mjs) at the call site, then pass its result here.
+ * projectDir(home, os, encodedCwd) -> <home>/.claude/projects/<encodedCwd>
  */
 export function projectDir(home, os, encodedCwd) {
   return pathFor(os).join(projectsBase(home, os), encodedCwd);

@@ -15,29 +15,7 @@ import { encodeCwd } from '../core/encode.mjs';
 import { projectDir } from '../core/platform.mjs';
 import { listSessions, resolveOne } from '../core/sessions.mjs';
 import { firstUserTitle, gitBranch, isAgent } from '../core/titles.mjs';
-
-/** Binary size like the PowerShell Fmt-Size: >=1MiB -> 'N.NMB' else 'N.NKB'. */
-export function fmtSize(bytes) {
-  if (bytes >= 1048576) return `${trim1(bytes / 1048576)}MB`;
-  return `${trim1(bytes / 1024)}KB`;
-}
-
-// One optional decimal, '0.#' style: drop a trailing '.0'.
-function trim1(n) {
-  const s = n.toFixed(1);
-  return s.endsWith('.0') ? s.slice(0, -2) : s;
-}
-
-/** Relative age from a mtime, like the PowerShell: Nd/Nh/Nm ago. */
-export function fmtAge(mtimeMs, nowMs) {
-  const diffMs = Math.max(0, nowMs - mtimeMs);
-  const totalMin = diffMs / 60000;
-  const totalHr = totalMin / 60;
-  const totalDay = totalHr / 24;
-  if (totalDay >= 1) return `${Math.floor(totalDay)}d ago`;
-  if (totalHr >= 1) return `${Math.floor(totalHr)}h ago`;
-  return `${Math.floor(totalMin)}m ago`;
-}
+import { fmtSize, fmtAge } from '../core/format.mjs';
 
 // Left/right pad to a fixed width (truncation is NOT done - matches PowerShell -f).
 function padRight(s, w) {
@@ -101,6 +79,10 @@ export function runList(args, ctx) {
  * Read-only target info for the delete wrapper's confirm flow.
  */
 export function runShow(uuidOrPrefix, ctx) {
+  if (!uuidOrPrefix) {
+    ctx.out('usage: list --show <uuid|prefix>');
+    return 4;
+  }
   const base = baseDirFor(ctx);
   const r = resolveOne(base, uuidOrPrefix, { fs: ctx.fs, pathlib: ctx.pathlib });
   if (r.status === 'none') {

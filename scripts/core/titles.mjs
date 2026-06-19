@@ -9,6 +9,11 @@
 // Performance parity with the PowerShell: branch is scanned in the first 60 lines,
 // agent flag in the first 5 lines; title scans until the first qualifying user msg.
 
+// Scan windows / limits, matching the original PowerShell Get-Branch/Is-Agent/Get-Title.
+const BRANCH_SCAN_LINES = 60; // gitBranch: only the first N lines
+const AGENT_SCAN_LINES = 5; // isAgent: only the first N lines
+const TITLE_MAX_CHARS = 48; // firstUserTitle: truncate the prompt to N chars
+
 // Split JSONL into lines, tolerating CRLF and a trailing newline.
 function toLines(jsonl) {
   return String(jsonl).split(/\r?\n/);
@@ -21,7 +26,7 @@ function toLines(jsonl) {
  */
 export function gitBranch(jsonl) {
   const lines = toLines(jsonl);
-  const limit = Math.min(lines.length, 60);
+  const limit = Math.min(lines.length, BRANCH_SCAN_LINES);
   for (let i = 0; i < limit; i++) {
     const m = lines[i].match(/"gitBranch":"([^"]+)"/);
     if (m) return m[1];
@@ -36,7 +41,7 @@ export function gitBranch(jsonl) {
  */
 export function isAgent(jsonl) {
   const lines = toLines(jsonl);
-  const limit = Math.min(lines.length, 5);
+  const limit = Math.min(lines.length, AGENT_SCAN_LINES);
   for (let i = 0; i < limit; i++) {
     if (lines[i].includes('"type":"agent-setting"')) return true;
   }
@@ -78,7 +83,7 @@ export function firstUserTitle(jsonl) {
     // Skip non-prompt openers: tool-result/array markers, markdown headers,
     // and the two known skill preambles.
     if (/^(<|\[|##\s|Base directory for this skill|A session-scoped)/.test(t)) continue;
-    return t.slice(0, 48);
+    return t.slice(0, TITLE_MAX_CHARS);
   }
   return '(no user prompt)';
 }

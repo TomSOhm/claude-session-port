@@ -16,6 +16,7 @@ import { resolveOne } from '../core/sessions.mjs';
 import { tokenizeHome } from '../core/remap.mjs';
 import { buildManifest, stringifyManifest } from '../core/manifest.mjs';
 import { createTarGz } from '../core/archive.mjs';
+import { stripQuotes } from '../core/args.mjs';
 
 /**
  * runExport([uuidOrPrefix, ...dstParts], ctx) -> exitCode
@@ -107,13 +108,4 @@ function copyTreeTokenized(srcDir, destDir, ctx) {
       fs.writeFileSync(dest, tokenizeHome(text, ctx.home));
     }
   }
-}
-
-function stripQuotes(s) {
-  if (s.length >= 2) {
-    const a = s[0];
-    const b = s[s.length - 1];
-    if ((a === '"' && b === '"') || (a === "'" && b === "'")) return s.slice(1, -1);
-  }
-  return s;
 }

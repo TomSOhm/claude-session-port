@@ -32,22 +32,23 @@ function hasCmd(cmd) {
 // --- per-OS native attempts: return true on success, false to try next/fallback ---
 
 function trashWin32(absPath) {
-  // Use VB FileSystem so a single API handles both files and directories and
-  // routes to the Recycle Bin. -LiteralPath equivalent: we pass the path as an arg.
+  // Use VB FileSystem so a single API handles both files and directories and routes to
+  // the Recycle Bin. The path is embedded as a single-quoted PowerShell literal (escape
+  // ' -> '') rather than passed as a trailing arg: `powershell -Command "<script>" <arg>`
+  // does NOT populate $args (verified - trailing tokens are appended to the command, not
+  // bound), so the old `$p = $args[0]` form passed an empty path and ALWAYS failed,
+  // silently degrading every Windows delete to the quarantine fallback.
+  const lit = "'" + String(absPath).replace(/'/g, "''") + "'";
   const ps = [
     'Add-Type -AssemblyName Microsoft.VisualBasic;',
-    '$p = $args[0];',
+    `$p = ${lit};`,
     'if (Test-Path -LiteralPath $p -PathType Container) {',
     "  [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($p,'OnlyErrorDialogs','SendToRecycleBin')",
     '} else {',
     "  [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($p,'OnlyErrorDialogs','SendToRecycleBin')",
     '}',
   ].join(' ');
-  const res = spawnSync(
-    'powershell',
-    ['-NoProfile', '-Command', ps, absPath],
-    { encoding: 'utf8' },
-  );
+  const res = spawnSync('powershell', ['-NoProfile', '-Command', ps], { encoding: 'utf8' });
   return !res.error && res.status === 0;
 }
 
@@ -71,8 +72,23 @@ function quarantine(absPath, { uuid, home, platform }) {
   const bucket = path.join(root, uuid || path.basename(absPath));
   fs.mkdirSync(bucket, { recursive: true });
   const dest = path.join(bucket, path.basename(absPath));
-  fs.renameSync(absPath, dest);
+  moveItem(absPath, dest);
   return dest;
+}
+
+// Move a file or directory; fall back to copy+remove across devices (renameSync throws
+// EXDEV when source and destination are on different volumes).
+function moveItem(src, dest) {
+  try {
+    fs.renameSync(src, dest);
+  } catch (err) {
+    if (err && err.code === 'EXDEV') {
+      fs.cpSync(src, dest, { recursive: true });
+      fs.rmSync(src, { recursive: true, force: true });
+    } else {
+      throw err;
+    }
+  }
 }
 
 /**

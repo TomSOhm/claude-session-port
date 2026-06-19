@@ -60,7 +60,10 @@ export function listSessions(baseDir, { fs, pathlib }) {
  * `memory`. `matches` (the 'many' case) lists uuids for the caller to print.
  */
 export function resolveOne(baseDir, uuidOrPrefix, { fs, pathlib }) {
-  const prefix = String(uuidOrPrefix ?? '');
+  const prefix = String(uuidOrPrefix ?? '').trim();
+  // An empty prefix must NOT match every session (startsWith('') is always true) - that
+  // would let a dropped argument silently target the lone session. Treat it as no match.
+  if (prefix === '') return { status: 'none' };
   const all = listSessions(baseDir, { fs, pathlib });
   const matches = all.filter((s) => s.uuid.startsWith(prefix));
   if (matches.length === 0) return { status: 'none' };

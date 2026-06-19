@@ -16,7 +16,8 @@ import { projectDir } from '../core/platform.mjs';
 import { parseManifest } from '../core/manifest.mjs';
 import { detokenizeHome } from '../core/remap.mjs';
 import { extract } from '../core/archive.mjs';
-import { fmtSize } from './list.mjs';
+import { fmtSize } from '../core/format.mjs';
+import { stripQuotes } from '../core/args.mjs';
 
 /**
  * runImport([archive], ctx) -> exitCode
@@ -37,7 +38,7 @@ export function runImport(args, ctx) {
   fs.mkdirSync(base, { recursive: true });
 
   // Fresh extraction dir under temp.
-  const stem = baseName(src, pathlib).replace(/\.(tar\.gz|tgz|zip)$/i, '');
+  const stem = pathlib.basename(src).replace(/\.(tar\.gz|tgz|zip)$/i, '');
   const tmp = pathlib.join(ctx.tmpDir, `csp-import-${stem}`);
   if (fs.existsSync(tmp)) fs.rmSync(tmp, { recursive: true, force: true });
   fs.mkdirSync(tmp, { recursive: true });
@@ -67,6 +68,14 @@ export function runImport(args, ctx) {
   }
 
   const uuid = man.uuid;
+  // Validate the session id from the (untrusted) manifest before joining it into paths:
+  // reject separators / '..' / odd chars so a crafted archive cannot write outside the
+  // project's session folder.
+  if (typeof uuid !== 'string' || !/^[A-Za-z0-9_-]+$/.test(uuid)) {
+    fs.rmSync(tmp, { recursive: true, force: true });
+    ctx.out(`BAD ARCHIVE: unsafe session id ${JSON.stringify(uuid)}`);
+    return 2;
+  }
   const srcJsonl = pathlib.join(tmp, `${uuid}.jsonl`);
   if (!fs.existsSync(srcJsonl)) {
     fs.rmSync(tmp, { recursive: true, force: true });
@@ -75,9 +84,16 @@ export function runImport(args, ctx) {
   }
 
   const dstJsonl = pathlib.join(base, `${uuid}.jsonl`);
-  if (fs.existsSync(dstJsonl)) {
+  const dstSidecar = pathlib.join(base, uuid);
+  // Refuse to overwrite an existing session - either the transcript OR a stale sidecar dir.
+  const clash = fs.existsSync(dstJsonl)
+    ? dstJsonl
+    : fs.existsSync(dstSidecar)
+      ? dstSidecar
+      : null;
+  if (clash) {
     fs.rmSync(tmp, { recursive: true, force: true });
-    ctx.out(`ALREADY EXISTS: ${dstJsonl} - aborting (delete it first to replace).`);
+    ctx.out(`ALREADY EXISTS: ${clash} - aborting (delete it first to replace).`);
     return 5;
   }
 
@@ -121,17 +137,4 @@ function copyTreeDetokenized(srcDir, destDir, ctx, homeTokenized) {
       fs.writeFileSync(dest, homeTokenized ? detokenizeHome(text, ctx.home) : text);
     }
   }
-}
-
-function baseName(p, pathlib) {
-  return pathlib.basename(p);
-}
-
-function stripQuotes(s) {
-  if (s.length >= 2) {
-    const a = s[0];
-    const b = s[s.length - 1];
-    if ((a === '"' && b === '"') || (a === "'" && b === "'")) return s.slice(1, -1);
-  }
-  return s;
 }

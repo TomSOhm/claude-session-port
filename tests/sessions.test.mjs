@@ -81,13 +81,15 @@ test('resolveOne: many when an 8-char prefix matches two uuids', (t) => {
   assert.deepEqual([...r.matches].sort(), [U1, U2].sort());
 });
 
-test('resolveOne: empty prefix matches everything (many) when >1 session exists', (t) => {
+test('resolveOne: empty/blank/undefined prefix returns none (must NOT match everything)', (t) => {
   const base = mkBase(t);
   touch(base, `${U1}.jsonl`);
   touch(base, `${U3}.jsonl`);
-  const r = resolveOne(base, '', { fs, pathlib });
-  assert.equal(r.status, 'many');
-  assert.equal(r.matches.length, 2);
+  // A dropped or empty argument must never silently select sessions (startsWith('')
+  // would otherwise match all) - resolveOne treats it as no match.
+  assert.equal(resolveOne(base, '', { fs, pathlib }).status, 'none');
+  assert.equal(resolveOne(base, '   ', { fs, pathlib }).status, 'none');
+  assert.equal(resolveOne(base, undefined, { fs, pathlib }).status, 'none');
 });
 
 test('listSessions detects a sidecar directory named exactly <uuid>', (t) => {
