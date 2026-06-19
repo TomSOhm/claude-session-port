@@ -16,6 +16,7 @@ import { projectDir } from '../core/platform.mjs';
 import { parseManifest } from '../core/manifest.mjs';
 import { detokenizeHome } from '../core/remap.mjs';
 import { extract } from '../core/archive.mjs';
+import { fmtSize } from './list.mjs';
 
 /**
  * runImport([archive], ctx) -> exitCode
@@ -98,11 +99,11 @@ export function runImport(args, ctx) {
   if (man.sourceProjectPath) {
     ctx.out(`from source project: ${man.sourceProjectPath}`);
   }
-  if (typeof man.jsonlBytes === 'number') {
-    ctx.out(`Run /resume here; row size ~ ${round1(man.jsonlBytes / 1048576)}MB.`);
-  } else {
-    ctx.out('Run /resume here and pick the row by its size.');
-  }
+  // Report the ACTUAL landed size (the file was just rewritten by detokenizeHome, so it can
+  // differ from the source manifest's jsonlBytes). This is the value /resume will show, so
+  // it stays a reliable SIZE-bridge key for /resume_title_uuid on this machine.
+  const landedBytes = fs.statSync(dstJsonl).size;
+  ctx.out(`Run /resume here; row size ${fmtSize(landedBytes)} (match this in the picker).`);
   return 0;
 }
 
@@ -124,10 +125,6 @@ function copyTreeDetokenized(srcDir, destDir, ctx, homeTokenized) {
 
 function baseName(p, pathlib) {
   return pathlib.basename(p);
-}
-
-function round1(n) {
-  return Math.round(n * 10) / 10;
 }
 
 function stripQuotes(s) {
