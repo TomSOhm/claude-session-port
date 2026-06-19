@@ -1,0 +1,23 @@
+{
+  "name": "claude-session-port",
+  "version": "0.1.0",
+  "description": "Portable single-session export for Claude Code - list, export, import, and delete one session by UUID and resume it on another machine. No cloud, no account, just a zip.",
+  "author": {
+    "name": "TomSOhm",
+    "url": "https://github.com/TomSOhm"
+  },
+  "homepage": "https://github.com/TomSOhm/claude-session-port",
+  "repository": "https://github.com/TomSOhm/claude-session-port",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "session",
+    "resume",
+    "export",
+    "import",
+    "uuid",
+    "transfer",
+    "portable",
+    "backup"
+  ]
+}

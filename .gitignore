@@ -1,0 +1,16 @@
+# Exported sessions / transcripts - never commit conversation data
+*.jsonl
+*.zip
+manifest.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Node (for the future cross-OS CLI)
+node_modules/
+npm-debug.log*
