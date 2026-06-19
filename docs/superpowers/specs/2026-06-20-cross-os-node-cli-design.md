@@ -12,7 +12,7 @@ the bundled CLI; the logic lives in one place and is tested on three OSes via Gi
 - **Full parity:** all 4 commands on Win/mac/Linux + any-direction transfer.
 - **Vehicle:** single **zero-dependency Node CLI** (Approach A). Node is guaranteed present
   (Claude Code runs on it). No npm dependencies. Tests use the built-in `node:test` runner.
-- **Path remap:** "clean the obvious paths" — tokenize the **home-directory prefix** to a
+- **Path remap:** "clean the obvious paths" - tokenize the **home-directory prefix** to a
   `${CSP_HOME}` token on export, detokenize to the target home on import. No deep rewrite.
 - **Delete:** **native trash per OS** (Recycle Bin / Finder Trash / `gio trash` or
   `trash-cli`), with a **quarantine-folder fallback** (`~/.claude/.trash-sessions/`) where no
@@ -29,7 +29,7 @@ the bundled CLI; the logic lives in one place and is tested on three OSes via Gi
 ```
 scripts/
   cli.mjs                 # entry: dispatch on argv[2] -> command module; print result; set exit code
-  core/                   # PURE logic — platform passed in as args, no global OS reads
+  core/                   # PURE logic - platform passed in as args, no global OS reads
     platform.mjs          #   detectOS(), homeDir(), projectsBase(home) -> ~/.claude/projects
     encode.mjs            #   encodeCwd(absPath) -> non-alphanumerics replaced by '-'
     sessions.mjs          #   listSessions(baseDir), resolveOne(baseDir, uuidOrPrefix) (0/1/many)
@@ -53,7 +53,7 @@ runner. Only `platform/trash.mjs` and the `commands/` glue do real I/O.
 Invoked from the command wrappers as:
 `node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" <command> [args...]`
 The CLI uses `process.cwd()` (the directory Claude Code runs the command from) to derive the
-project folder — same as the PowerShell `(Get-Location).Path` behavior.
+project folder - same as the PowerShell `(Get-Location).Path` behavior.
 
 | Command | Args | Behavior | Exit |
 |---|---|---|---|
@@ -130,11 +130,11 @@ asks the user to type `yes`, and only then runs `cli.mjs delete <uuid> --hard --
 
 ## Tests (node:test, zero-dep)
 
-- `tests/fixtures/` — small hand-made `.jsonl` transcripts (a normal one, an `agent-setting`
+- `tests/fixtures/` - small hand-made `.jsonl` transcripts (a normal one, an `agent-setting`
   one, one containing a home path to exercise remap) + an expected manifest.
 - `tests/*.test.mjs` assert:
   - `encodeCwd` maps Windows / mac / Linux sample paths to the expected encoded folder
-    (platform injected — runs on any OS).
+    (platform injected - runs on any OS).
   - `tokenizeHome` then `detokenizeHome` round-trips to a *different* home (cross-OS sim).
   - `manifest` build/parse round-trip; legacy manifest handled.
   - `archive` create -> extract reproduces the staged files byte-for-byte (real `tar`).

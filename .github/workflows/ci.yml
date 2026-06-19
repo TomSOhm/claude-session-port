@@ -1,0 +1,57 @@
+name: CI
+
+# Run on every push and PR. The whole point of this workflow is the cross-OS
+# parity guarantee: the same zero-dependency node:test suite must pass on Windows,
+# macOS, and Linux (the three OSes Claude Code runs on).
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Don't cancel the other OSes when one fails - we want the full parity picture.
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    # Force bash on every runner. ubuntu/macOS default to bash already; Windows
+    # defaults to pwsh, so this keeps the `run:` blocks identical across all three.
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Which tar is first on PATH? On Windows this should be bsdtar (System32);
+      # if a GNU tar shadows it, drive-letter paths (C:\...) break with
+      # "Cannot connect to C:" - this line makes that diagnosable at a glance.
+      - name: Debug - tar version
+        run: tar --version
+
+      # Syntax-check every ESM module before running anything. Fails fast on a typo
+      # in either the runtime (scripts/) or the suite (tests/).
+      - name: Syntax check (node --check on every .mjs)
+        run: |
+          set -e
+          found=0
+          for f in $(find scripts tests -name '*.mjs' | sort); do
+            echo "node --check $f"
+            node --check "$f"
+            found=$((found + 1))
+          done
+          echo "checked $found .mjs files"
+          if [ "$found" -eq 0 ]; then
+            echo "no .mjs files found - failing" >&2
+            exit 1
+          fi
+
+      - name: Run tests (node --test)
+        run: node --test

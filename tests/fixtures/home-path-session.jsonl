@@ -1,0 +1,3 @@
+{"type":"summary","summary":"Session with embedded home paths"}
+{"type":"user","cwd":"/Users/alice/app","gitBranch":"main","message":{"role":"user","content":"My project is at /Users/alice/app and the log is /Users/alice/app/run.log"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"On Windows the same tree was C:\\Users\\alice\\app, and a sibling at /Users/alice/notes."}]}}
