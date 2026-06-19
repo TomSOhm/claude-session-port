@@ -3,7 +3,6 @@
 **Portable single-session export for Claude Code - no cloud, no account, just an archive.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/TomSOhm/claude-session-port/actions/workflows/ci.yml/badge.svg)](https://github.com/TomSOhm/claude-session-port/actions/workflows/ci.yml)
 ![Platform: Windows | macOS | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![Status: v0.2.0](https://img.shields.io/badge/status-v0.2.0-orange)
 
