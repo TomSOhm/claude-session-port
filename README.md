@@ -198,6 +198,40 @@ match key = SIZE (== /resume). AGENT rows + the current session are hidden from 
 
 ---
 
+## Workflow
+
+**Move a session to another machine**
+
+1. On the source machine, in the project directory, run `/resume_title_uuid`. It lists every
+   session with its `UUID · size · age · branch · title`.
+2. Pick the one you want and copy its UUID (a prefix of >= 8 chars is enough).
+3. `/export_uuid <uuid> <folder>` -> writes `<folder>/<uuid>.tar.gz`.
+4. Move that archive to the other machine (USB, shared drive, chat - your choice).
+5. In the **same project directory** there, run `/import_uuid <archive>`, then `/resume` and
+   open the session.
+
+### Do I have to check the size?
+
+**No - only in one situation:** when you are looking at a row in the `/resume` picker and need
+to find *its* UUID (to export or delete that specific session). The picker shows size but
+**hides the UUID**, and its title is derived differently from the raw prompt, so **size is the
+reliable key** to line up a picker row with a `/resume_title_uuid` row (branch + age help, but
+can collide).
+
+**You can skip the size check when:**
+
+- you already know the UUID (or ran `/resume_title_uuid`, which shows it directly);
+- there is only one session in the project;
+- you just imported one - `/import_uuid` prints the UUID and the landed row size, and the
+  import is normally the newest row in `/resume`, so you can pick it by recency.
+
+> Always match against the size shown by `/resume_title_uuid` **on the machine you are on**.
+> After an import, the landed file is rewritten (home paths remapped), so its size can differ
+> from the source machine's - but `/resume_title_uuid` and `/resume` on the destination always
+> agree with each other.
+
+---
+
 ## How it works
 
 - **Thin wrappers over one CLI:** each `commands/*.md` is a small wrapper that parses
