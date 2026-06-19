@@ -14,3 +14,6 @@ desktop.ini
 # Node (for the future cross-OS CLI)
 node_modules/
 npm-debug.log*
+
+# Local-only project notes (private, never pushed)
+ROADMAP.md
