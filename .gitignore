@@ -1,7 +1,13 @@
 # Exported sessions / transcripts - never commit conversation data
 *.jsonl
 *.zip
+*.tar.gz
 manifest.json
+
+# ...but DO track the hand-made test fixtures (tiny, synthetic, no real user data).
+# These exceptions must come AFTER the ignore rules above to take effect.
+!tests/fixtures/
+!tests/fixtures/**
 
 # OS / editor cruft
 .DS_Store
@@ -17,3 +23,4 @@ npm-debug.log*
 
 # Local-only project notes (private, never pushed)
 ROADMAP.md
+docs/superpowers/

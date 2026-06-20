@@ -15,8 +15,8 @@ Claude Code's **undocumented** on-disk layout as observed; it can change between
   transcript.
 - `<encoded-cwd>` is the project's **absolute path** with **every non-alphanumeric
   character replaced by `-`**. Examples:
-  - Windows `C:\Users\you\my-app` → `C--Users-you-my-app` (`:` and both `\` each become `-`)
-  - macOS/Linux `/Users/you/my-app` → `-Users-you-my-app` (leading `/` becomes `-`)
+  - Windows `C:\Users\you\my-app` -> `C--Users-you-my-app` (`:` and both `\` each become `-`)
+  - macOS/Linux `/Users/you/my-app` -> `-Users-you-my-app` (leading `/` becomes `-`)
 
 Because the folder is derived from the absolute path, a session is only discoverable by
 `/resume` when you run Claude Code from a directory that encodes to the **same** folder
@@ -35,45 +35,77 @@ commands read from the first lines:
 > Claude Code flushes the transcript to disk **on exit**. Export a session from a different
 > session, or after exiting the one you want to move.
 
-## The export bundle (`<uuid>.zip`)
+## The export bundle (`<uuid>.tar.gz`)
 
-`/export_uuid` stages and zips:
+`/export_uuid` stages and archives the following into `<dst>/<uuid>.tar.gz` (created with the
+system `tar`, which is bsdtar on Windows 10+, macOS, and Linux):
 
 ```
-<uuid>.jsonl        # the transcript
-<uuid>/             # the sidecar dir, if it exists
-manifest.json       # metadata written by /export_uuid
+<uuid>.jsonl        # the transcript (home prefix tokenized to ${CSP_HOME})
+<uuid>/             # the sidecar dir, if it exists (each file also tokenized)
+manifest.json       # metadata written by /export_uuid (schema v2)
 ```
 
-`manifest.json`:
+Import accepts a `.tar.gz` (or a legacy v0.1.0 `.zip`); the format is sniffed by extension,
+and by magic bytes when ambiguous (`1f 8b` = gzip, `50 4b` = zip).
+
+### `manifest.json` (schema v2)
 
 ```json
 {
+  "schemaVersion": 2,
   "uuid": "<uuid>",
-  "sourceProjectPath": "C:\\Users\\you\\my-app",
-  "encodedSource": "C--Users-you-my-app",
+  "sourceProjectPath": "/Users/you/my-app",
+  "encodedSource": "-Users-you-my-app",
+  "sourceOS": "darwin",
+  "sourceHome": "/Users/you",
+  "homeTokenized": true,
   "jsonlBytes": 2012664,
   "hasSidecar": true
 }
 ```
 
-`/import_uuid` reads `manifest.json` to recover the UUID and reports the source project
-path and the expected `/resume` row size.
+- `schemaVersion` - `2` for current exports.
+- `sourceOS` - the source platform (`win32` / `darwin` / `linux`).
+- `sourceHome` - the source machine's home directory (the prefix that was tokenized).
+- `homeTokenized` - `true` when the transcript's home prefix was replaced with `${CSP_HOME}`.
 
-## The SIZE → picker bridge
+`/import_uuid` reads `manifest.json` to recover the UUID, detokenizes `${CSP_HOME}` (when
+`homeTokenized` is true), and reports the source project path and the expected `/resume` row
+size.
 
-The `/resume` picker displays each session's **title · age · git-branch · size** - but
-**not** its UUID. `/resume_title_uuid` lists `UUID · size · age · branch · title`, so the
+**Legacy bundles.** A v0.1.0 manifest has no `schemaVersion`/`homeTokenized` and is read as
+`schemaVersion: 1`, `homeTokenized: false`; such a bundle is landed as-is without remapping.
+
+## The `${CSP_HOME}` home-token remap
+
+To keep transferred transcripts readable across usernames and operating systems, the
+**home-directory prefix** is tokenized (not a deep path rewrite):
+
+- **On export:** every literal occurrence of the source home (in both the OS-native and
+  forward-slash form, case-insensitively for Windows drive paths) is replaced with the token
+  `${CSP_HOME}` in the `.jsonl` and any sidecar files.
+- **On import:** `${CSP_HOME}` is replaced with the **destination** machine's home in its
+  native separator.
+
+Only the home prefix is touched - arbitrary path-like strings are left alone. The project
+folder itself is re-derived from the current working directory on import, so `/resume` works
+regardless of the source path; tokenizing is cosmetic polish for scrolled-back history.
+
+## The SIZE -> picker bridge
+
+The `/resume` picker displays each session's **title, age, git-branch, size** - but
+**not** its UUID. `/resume_title_uuid` lists `UUID, size, age, branch, title`, so the
 session **file size** (binary KB/MB) is the reliable key to match a picker row to its UUID.
 Title is only a hint (the picker derives its displayed title with logic that can't be read
 from disk); branch and age help disambiguate.
 
 ## Caveats when moving across machines
 
-- **Paths are absolute.** The transcript embeds the source machine's paths. Resume works,
-  but old paths appear in history and new work uses the destination machine's paths. Within
-  the same OS and username this is invisible; across OSes it is noticeable. Cross-OS path
-  remapping is on the roadmap.
+- **Only the home prefix is remapped.** The transcript's home prefix is tokenized on export
+  and remapped to the destination home on import, so paths under home read cleanly. Paths
+  outside home are left unchanged; resume works regardless, since the project folder is
+  re-derived from the current directory.
 - **Code is not included.** The bundle moves the *conversation*, not your repository. Sync
   the code separately with git.
 - **Version sensitivity.** The layout is undocumented and has changed across Claude Code

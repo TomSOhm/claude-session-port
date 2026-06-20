@@ -1,0 +1,3 @@
+{"type":"agent-setting","agent":"general-purpose","model":"opus"}
+{"type":"user","gitBranch":"agent/spike","message":{"role":"user","content":"Investigate where the encode logic lives and report back."}}
+{"type":"assistant","gitBranch":"agent/spike","message":{"role":"assistant","content":[{"type":"text","text":"Found it in core/encode.mjs."}]}}

@@ -1,0 +1,16 @@
+{
+  "name": "claude-session-port",
+  "version": "0.2.0",
+  "description": "Cross-OS, dependency-free CLI to list, export, import, and delete Claude Code sessions by UUID.",
+  "type": "module",
+  "bin": {
+    "claude-session-port": "scripts/cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

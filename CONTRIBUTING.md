@@ -5,38 +5,57 @@ and portable are very welcome.
 
 ## Good first contributions
 
-- **macOS/Linux backend** for any of the four commands.
-- **The Node rewrite** - port the embedded PowerShell to a single bundled
-  `scripts/cli.mjs` invoked via `node ${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs <cmd> …`, so one
-  codebase runs everywhere Claude Code does.
-- **Path remapping on import** - rewrite the source machine's `${HOME}`/cwd tokens to the
-  destination's so a session moves cleanly across usernames and operating systems.
-- **Compatibility reports** - tell us which Claude Code versions a command works (or breaks)
-  on.
+- **Deeper path remapping** - today only the home prefix is tokenized (`${CSP_HOME}`).
+  Rewriting other machine-specific path-like strings could make scrolled-back history read
+  even more cleanly, without corrupting transcript content.
+- **More CLI test fixtures** - add hand-made `.jsonl` transcripts and cases under `tests/` to
+  cover more session shapes.
+- **Compatibility reports** - tell us which Claude Code versions and operating systems a
+  command works (or breaks) on, especially live `/resume` pickup on macOS and Linux.
 
 ## How the commands work
 
 Each command is a Markdown file in `commands/` with YAML frontmatter
-(`description`, `argument-hint`, `allowed-tools`, `shell`) followed by instructions and a
-PowerShell script. Claude Code reads the file, parses `$ARGUMENTS`, and runs the script.
-There is no build step.
+(`description`, `argument-hint`, `allowed-tools`) followed by short instructions. The body is
+a **thin wrapper**: Claude Code reads the file, parses `$ARGUMENTS`, and runs the bundled,
+zero-dependency Node CLI via
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/cli.mjs" <list|export|import|delete> $ARGUMENTS`, then
+prints the output verbatim. All the real logic lives in `scripts/` (`cli.mjs` dispatches to
+`scripts/commands/*.mjs`, which build on the pure helpers in `scripts/core/`); there is no
+build step and no runtime dependencies.
 
 Sessions live at `~/.claude/projects/<encoded-cwd>/<uuid>.jsonl`, where `<encoded-cwd>` is
 the absolute project path with every non-alphanumeric character replaced by `-`. See
 [docs/session-format.md](docs/session-format.md).
 
+## Tests
+
+The CLI is covered by the built-in `node:test` runner (no test dependencies):
+
+```bash
+node --test
+```
+
+CI runs `node --check` on every `.mjs` plus `node --test` on a matrix of
+`windows-latest`, `macos-latest`, and `ubuntu-latest` for every push and pull request, so the
+file mechanics are proven on all three operating systems. CI **cannot** drive the Claude Code
+app, so live `/resume` pickup of an imported session is verified separately by the maintainer.
+
 ## Manual round-trip test
 
-The core behavior to preserve is a clean export → import → resume cycle. On a throwaway
+The core behavior to preserve is a clean export -> import -> resume cycle. On a throwaway
 project with at least one saved session:
 
 1. `/resume_title_uuid` - note a UUID and its size.
-2. `/export_uuid <uuid> <some-folder>` - confirm a `<uuid>.zip` with a `manifest.json`.
-3. `/delete_uuid <uuid>` - confirm it moved to the Recycle Bin.
-4. `/import_uuid <some-folder>\<uuid>.zip` - confirm it lands in the project folder.
+2. `/export_uuid <uuid> <some-folder>` - confirm a `<uuid>.tar.gz` containing a
+   `manifest.json`.
+3. `/delete_uuid <uuid>` - confirm it moved to the OS native trash.
+4. `/import_uuid <some-folder>/<uuid>.tar.gz` - confirm it lands in the project folder.
 5. `/resume` - confirm the row reappears, matched by its size.
 
-If you add an OS backend, run the same cycle on that OS.
+You can also drive the CLI directly without Claude Code:
+`node scripts/cli.mjs export <uuid> <folder>` (and `import` / `list` / `delete`). If you add a
+fixture or behavior, run the same cycle on your OS and let CI cover the others.
 
 ## Conventions
 
