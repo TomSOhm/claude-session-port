@@ -19,7 +19,7 @@ Nothing is uploaded anywhere.
 /delete_uuid <uuid> [--hard]    # prune a local session (native trash or permanent)
 ```
 
-https://github.com/user-attachments/assets/176e8b09-113a-4d97-9755-a07dbbc0bd55
+![claude-session-port: export a session on one machine, resume it on another](docs/demo.webp)
 
 
 > ⚠️ **Status: v0.2.0 is new and not yet battle-tested in everyday real-world use. Treat it
