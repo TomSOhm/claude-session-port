@@ -21,6 +21,8 @@ Nothing is uploaded anywhere.
 
 ![claude-session-port: export a session on one machine, resume it on another](docs/demo.webp)
 
+*Want sharper detail? [Download the full-resolution MP4](https://github.com/TomSOhm/claude-session-port/releases/download/v0.2.0/claude-session-port.mp4).*
+
 
 > ⚠️ **Status: v0.2.0 is new and not yet battle-tested in everyday real-world use. Treat it
 > as beta.**
