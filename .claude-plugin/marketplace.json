@@ -7,7 +7,7 @@
     {
       "name": "claude-session-port",
       "source": ".",
-      "description": "Portable single-session export for Claude Code - no cloud, no account, just a zip."
+      "description": "Portable single-session export for Claude Code - no cloud, no account, just a .tar.gz."
     }
   ]
 }
