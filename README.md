@@ -46,7 +46,10 @@ Nothing is uploaded anywhere.
 ## Why this exists
 
 Claude Code has **no built-in command to export/import a session between machines**
-(open feature request: [anthropics/claude-code#18645](https://github.com/anthropics/claude-code/issues/18645)).
+(a long-standing community request - the open thread is
+[anthropics/claude-code#11455](https://github.com/anthropics/claude-code/issues/11455); the
+narrower export/import asks [#18645](https://github.com/anthropics/claude-code/issues/18645) and
+[#17682](https://github.com/anthropics/claude-code/issues/17682) were closed as duplicate and not-planned).
 Sessions live on local disk as append-only JSONL transcripts:
 
 ```
@@ -217,23 +220,15 @@ match key = SIZE (== /resume). AGENT rows + the current session are hidden from 
 
 ### Do I have to check the size?
 
-**No - only in one situation:** when you are looking at a row in the `/resume` picker and need
-to find *its* UUID (to export or delete that specific session). The picker shows size but
-**hides the UUID**, and its title is derived differently from the raw prompt, so **size is the
-reliable key** to line up a picker row with a `/resume_title_uuid` row (branch + age help, but
-can collide).
-
-**You can skip the size check when:**
-
-- you already know the UUID (or ran `/resume_title_uuid`, which shows it directly);
-- there is only one session in the project;
-- you just imported one - `/import_uuid` prints the UUID and the landed row size, and the
-  import is normally the newest row in `/resume`, so you can pick it by recency.
+Only to map a `/resume` picker row to its UUID: the picker shows size but **hides the UUID**,
+so size is the reliable key to line a picker row up with a `/resume_title_uuid` row (branch and
+age help but can collide). Skip it when you already know the UUID, there is only one session, or
+you just imported one (`/import_uuid` prints the UUID, and the import is usually the newest
+`/resume` row).
 
 > Always match against the size shown by `/resume_title_uuid` **on the machine you are on**.
-> After an import, the landed file is rewritten (home paths remapped), so its size can differ
-> from the source machine's - but `/resume_title_uuid` and `/resume` on the destination always
-> agree with each other.
+> After an import the file is rewritten (home paths remapped), so its size can differ from the
+> source machine's, but `/resume_title_uuid` and `/resume` on the destination always agree.
 
 ---
 
@@ -302,12 +297,12 @@ See [docs/session-format.md](docs/session-format.md) for the full layout and cav
 
 - **Node:** requires Node >= 18 (for the bundled CLI and its `node:test` suite). Node ships
   with Claude Code, so there is nothing extra to install.
-- **OS:** Windows, macOS, and Linux. Archiving uses the system `tar` (bsdtar ships on
-  Windows 10+, macOS, and Linux).
+- **OS:** Windows, macOS, and Linux. Archiving uses the system `tar`, which ships on
+  Windows 10+, macOS, and Linux (both bsdtar and Git-for-Windows GNU tar are handled).
 
-| Claude Code version | Status |
-|---|---|
-| _fill in the version you tested_ | ✅ working |
+| Claude Code version | Platform | Status |
+|---|---|---|
+| latest tested by the maintainer | Windows | ✅ working |
 
 The session-storage layout is undocumented and may change. If a Claude Code update breaks a
 command, please [open an issue](https://github.com/TomSOhm/claude-session-port/issues) with
@@ -338,7 +333,8 @@ for the CLI, or compatibility reports across Claude Code versions and operating 
 
 ## Related projects & acknowledgements
 
-- [anthropics/claude-code#18645](https://github.com/anthropics/claude-code/issues/18645) - the open export/import feature request
+- [anthropics/claude-code#11455](https://github.com/anthropics/claude-code/issues/11455) - open "session handoff / continuity" request
+- [anthropics/claude-code#18645](https://github.com/anthropics/claude-code/issues/18645) - cross-machine export/import request (closed as a duplicate of #17682)
 - [claude-sync](https://github.com/tawanorg/claude-sync) - full `.claude` sync via Cloudflare R2, E2E encrypted (the `${HOME}`-token path-remap idea is theirs)
 - [claude-code-sync](https://github.com/porkchop/claude-code-sync) - git-based whole-environment sync
 - [hex/claude-sessions](https://github.com/hex/claude-sessions) - session manager with deterministic UUID resume
