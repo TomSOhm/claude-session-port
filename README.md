@@ -46,7 +46,10 @@ Nothing is uploaded anywhere.
 ## Why this exists
 
 Claude Code has **no built-in command to export/import a session between machines**
-(open feature request: [anthropics/claude-code#18645](https://github.com/anthropics/claude-code/issues/18645)).
+(a long-standing community request - the open thread is
+[anthropics/claude-code#11455](https://github.com/anthropics/claude-code/issues/11455); the
+narrower export/import asks [#18645](https://github.com/anthropics/claude-code/issues/18645) and
+[#17682](https://github.com/anthropics/claude-code/issues/17682) were closed as duplicate and not-planned).
 Sessions live on local disk as append-only JSONL transcripts:
 
 ```
@@ -330,7 +333,8 @@ for the CLI, or compatibility reports across Claude Code versions and operating 
 
 ## Related projects & acknowledgements
 
-- [anthropics/claude-code#18645](https://github.com/anthropics/claude-code/issues/18645) - the open export/import feature request
+- [anthropics/claude-code#11455](https://github.com/anthropics/claude-code/issues/11455) - open "session handoff / continuity" request
+- [anthropics/claude-code#18645](https://github.com/anthropics/claude-code/issues/18645) - cross-machine export/import request (closed as a duplicate of #17682)
 - [claude-sync](https://github.com/tawanorg/claude-sync) - full `.claude` sync via Cloudflare R2, E2E encrypted (the `${HOME}`-token path-remap idea is theirs)
 - [claude-code-sync](https://github.com/porkchop/claude-code-sync) - git-based whole-environment sync
 - [hex/claude-sessions](https://github.com/hex/claude-sessions) - session manager with deterministic UUID resume
