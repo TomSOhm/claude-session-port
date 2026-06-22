@@ -38,7 +38,8 @@ commands read from the first lines:
 ## The export bundle (`<uuid>.tar.gz`)
 
 `/export_uuid` stages and archives the following into `<dst>/<uuid>.tar.gz` (created with the
-system `tar`, which is bsdtar on Windows 10+, macOS, and Linux):
+system `tar`, which ships on Windows 10+, macOS, and Linux; both bsdtar and the GNU tar
+bundled with Git for Windows are handled):
 
 ```
 <uuid>.jsonl        # the transcript (home prefix tokenized to ${CSP_HOME})

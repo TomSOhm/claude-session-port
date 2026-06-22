@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>claude-session-port - move one Claude Code session between machines</title>
+<meta name="description" content="Portable single-session export for Claude Code. Native slash-commands to list, export, import, and delete one session by UUID. No cloud, no account, just a .tar.gz. Windows, macOS, Linux.">
+<meta property="og:title" content="claude-session-port">
+<meta property="og:description" content="Carry one Claude Code conversation from one machine to another. No cloud, no account, just a .tar.gz.">
+<meta property="og:image" content="demo.webp">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --bg:#0b0c0e; --panel:#121317; --line:#23252b; --fg:#e7e7ea;
+    --muted:#9aa0aa; --accent:#e8623c; --code:#161821;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:16px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+  header{padding:64px 0 8px;text-align:center}
+  h1{font-size:40px;margin:0 0 6px;letter-spacing:-.5px}
+  .tag{color:var(--muted);font-size:17px;margin:0 auto 26px;max-width:640px}
+  .cta{display:inline-flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:34px}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--fg);
+    padding:10px 16px;border-radius:8px;font-size:14px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#120a07;font-weight:600}
+  .btn:hover{text-decoration:none;border-color:var(--accent)}
+  figure{margin:0 0 12px}
+  img.demo{width:100%;border:1px solid var(--line);border-radius:10px;display:block}
+  .cap{color:var(--muted);font-size:13px;text-align:center;margin:8px 0 0}
+  section{padding:38px 0;border-top:1px solid var(--line)}
+  h2{font-size:22px;margin:0 0 14px}
+  p{color:#d4d6db}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:8px;
+    padding:14px 16px;overflow:auto;font-size:13.5px;margin:14px 0}
+  code{color:#cfd3dc}
+  .muted{color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{color:var(--muted);font-weight:600}
+  tr.me td{background:#15110f}
+  ul.points{list-style:none;padding:0;margin:0}
+  ul.points li{padding:6px 0 6px 22px;position:relative}
+  ul.points li::before{content:"+";position:absolute;left:0;color:var(--accent)}
+  footer{padding:34px 0 60px;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line)}
+  .note{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:13.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>claude-session-port</h1>
+    <p class="tag">Portable single-session export for Claude Code. No cloud, no account, just a <code>.tar.gz</code>. Carry one conversation from one machine to another, resume it, and keep your local session folder tidy.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/TomSOhm/claude-session-port">View on GitHub</a>
+      <a class="btn" href="#install">Install</a>
+      <a class="btn" href="https://github.com/TomSOhm/claude-session-port/issues">Report / request</a>
+    </div>
+    <figure>
+      <img class="demo" src="demo.webp" alt="claude-session-port: export a session on one machine, resume it on another">
+      <p class="cap">Want sharper detail? <a href="https://github.com/TomSOhm/claude-session-port/releases/download/v0.2.0/claude-session-port.mp4">Download the full-resolution MP4</a>.</p>
+    </figure>
+  </header>
+
+  <section>
+    <h2>Four commands</h2>
+    <pre><code>/resume_title_uuid              # which session is which? (maps a /resume row -&gt; UUID)
+/export_uuid &lt;uuid&gt; &lt;folder&gt;    # archive one session for transport
+/import_uuid &lt;archive&gt;          # land it on the other machine so /resume finds it
+/delete_uuid &lt;uuid&gt; [--hard]    # prune a local session (native trash or permanent)</code></pre>
+    <p class="note"><strong>Status: v0.2.0, beta.</strong> Cross-OS file mechanics pass CI on Windows, macOS, and Linux; the maintainer has run the full export -&gt; import -&gt; <code>/resume</code> round-trip on Windows. Live <code>/resume</code> pickup on macOS/Linux is community-confirmed. Keep the original until you have confirmed the copy resumes.</p>
+  </section>
+
+  <section>
+    <h2>Why it exists</h2>
+    <p>Claude Code has no built-in way to export and import a single session between machines. Sessions live on disk as <code>~/.claude/projects/&lt;encoded-cwd&gt;/&lt;uuid&gt;.jsonl</code>, indexed by the project's absolute path. Copying the file by hand does not work: the destination has to resolve to the same encoded folder, with the right UUID. This tool automates that copy and the UUID bookkeeping for one session.</p>
+  </section>
+
+  <section>
+    <h2>How it is different</h2>
+    <p class="muted">Most tools in this space continuously sync your whole <code>.claude</code> directory to a cloud bucket or git remote. This one is deliberately small.</p>
+    <ul class="points">
+      <li><strong>Single-session granularity</strong> - move exactly one conversation, not everything.</li>
+      <li><strong>Zero infrastructure</strong> - no account, no bucket, no remote, no keys. The artifact is one <code>.tar.gz</code>; you choose the transport.</li>
+      <li><strong>Native slash-commands</strong> - runs inside Claude Code, installs as a plugin.</li>
+      <li><strong>Cross-OS</strong> - one bundled, zero-dependency Node CLI, so all four commands work on Windows, macOS, and Linux.</li>
+      <li><strong>The SIZE bridge</strong> - <code>/resume_title_uuid</code> maps each <code>/resume</code> picker row to its UUID using file size.</li>
+    </ul>
+    <table>
+      <tr><th>Tool</th><th>Scope</th><th>Infra</th><th>Cross-OS</th><th>Resumable</th></tr>
+      <tr class="me"><td><strong>claude-session-port</strong></td><td>move 1 session</td><td>none (a .tar.gz)</td><td>Win / mac / Linux</td><td>yes</td></tr>
+      <tr><td>claude-sync</td><td>sync everything</td><td>Cloudflare R2</td><td>yes</td><td>yes</td></tr>
+      <tr><td>claude-code-sync</td><td>sync everything</td><td>git remote</td><td>yes</td><td>yes</td></tr>
+      <tr><td>--teleport (official)</td><td>web to local</td><td>Anthropic web</td><td>n/a</td><td>one-way</td></tr>
+      <tr><td>/export session.md (built-in)</td><td>share transcript</td><td>none</td><td>yes</td><td>no</td></tr>
+    </table>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p class="muted">Windows, macOS, and Linux. Node &gt;= 18 ships with Claude Code, so there is nothing else to install.</p>
+    <p><strong>As a Claude Code plugin (recommended)</strong>, inside Claude Code:</p>
+    <pre><code>/plugin marketplace add TomSOhm/claude-session-port
+/plugin install claude-session-port@claude-session-port</code></pre>
+    <p><strong>Manual</strong>, from a clone of the repo:</p>
+    <pre><code>cp commands/*.md ~/.claude/commands/</code></pre>
+  </section>
+
+  <footer>
+    <a href="https://github.com/TomSOhm/claude-session-port">GitHub</a> &nbsp;.&nbsp;
+    <a href="https://github.com/TomSOhm/claude-session-port/blob/main/README.md">Docs</a> &nbsp;.&nbsp;
+    <a href="https://github.com/TomSOhm/claude-session-port/issues">Issues</a> &nbsp;.&nbsp;
+    <a href="https://github.com/TomSOhm/claude-session-port/blob/main/LICENSE">MIT License</a>
+    <p>Not affiliated with Anthropic. Claude Code is a product of Anthropic.</p>
+  </footer>
+
+</div>
+</body>
+</html>
